@@ -1,4 +1,6 @@
 ;OlekKlu
+; edition inplemented a uncond. jump to loop the programm
+;ACII conv need to be perfomed with cond j and sep label to save space
 
 SYS_EXIT  equ 1
 SYS_READ  equ 3
@@ -8,55 +10,63 @@ STDOUT    equ 1
 
 section	.data
 
-msgG	db	'This is second version of calculator',0xa	;our dear string
+msgG	db	0xa,'This is second version of calculator',0xa	;our dear string
 lenG	equ	$ - msgG			;General
 
 
 
-msg1	db	'Please enter the 1st num',0xa	;1st num
+msg1	db	0xa,'Please enter the 1st num:',0xa	;1st num
 len1	equ	$ - msg1			;length of  string
 
-msg2	db	'Please enter the 2nd num',0xa	;our dear string
+msg2	db	'Please enter the 2nd num:',0xa	;our dear string
 len2	equ	$ - msg2			;length of  string
 
-msg3	db	'Result is',0xa	;our dear string
+msg3	db	'Result is:',0xa	
 len3	equ	$ - msg3			
 
-msg4	db	'Good bye',0xa	;our dear string
+msg4	db	'Good bye!',0xa	
 len4	equ	$ - msg4			
 
-msgA	db	'press 1 for ADDition',0xa	;our dear string
+msgA	db	'press 1 for ADDition',0xa	
 lenA	equ	$ - msgA			
 
-msgS	db	'press 2 for SUBstraction',0xa	;our dear string
+msgS	db	'press 2 for SUBstraction',0xa	
 lenS	equ	$ - msgS			
 
-msgD	db	'press 3 for DIVision',0xa	;our dear string
+msgD	db	'press 3 for DIVision',0xa	
 lenD	equ	$ - msgD			
 
-msgM	db	'press 4 for Multiply',0xa	;our dear string
+msgM	db	'press 4 for Multiply',0xa	
 lenM	equ	$ - msgM			
 
-msgMo	db	'press 5 to Modulo',0xa	;our dear string
+msgMo	db	'press 5 to Modulo',0xa	
 lenMo	equ	$ - msgMo			
 
-msgI	db	'press 6 to Increment',0xa	;our dear string
+msgI	db	'press 6 to Increment',0xa	
 lenI	equ	$ - msgI			
 
-msgDe	db	'press 7 to Decrement',0xa	;our dear string
+msgDe	db	'press 7 to Decrement',0xa	
 lenDe	equ	$ - msgDe			
 
-msgEx	db	'press 8 to Exit',0xa	;our dear string
-lenEx	equ	$ - msgEx			
+msgEx	db	'press 8 to Exit',0xa	
+lenEx	equ	$ - msgEx	
+
+
+msgExO	db	0xa,'press 8 to exit or any different number to continue',0xa	
+lenExO	equ	$ - msgExO	
+
+
+
 
 
 section .bss
     opt  resb 2
     val1 resb 2
     val2 resb 2
+    opt2 resb 2
     res  resb 2
     res2 resb 2
-    ck   resb 2; checker
+    ck   resb 2; checker for primitive debug without gdb
 
 section	.text
 global _start       
@@ -67,7 +77,11 @@ _start:
     MOV ecx, msgG
     MOV edx, lenG
     INT 80h
-    
+loop1:  
+    MOV eax, 0
+    MOV ebx, 0
+    MOV ecx, 0
+    MOV edx, 0
     ; Please enter the 1st number
     MOV eax, SYS_WRITE
     MOV ebx, STDOUT
@@ -148,7 +162,7 @@ _start:
     INT 80h
     
     
-    ; Read val2
+    ; Read menu option
     MOV eax, SYS_READ
     MOV ebx, STDIN
     MOV ecx, opt
@@ -177,30 +191,42 @@ _start:
     CMP eax,8
     JMP exit
     
-    CMP eax,9
-    
-    JE reload; does not work
-    
     ;Write "The result is" !!!!
     MOV eax, SYS_WRITE
     MOV ebx, STDOUT
     MOV ecx, msg3
     MOV edx, len3
     INT 80h
+    
+newL:;thows message to choose option continue or exit
 
-reload:
-    ;XOR edx,edx
-    ;XOR ebx,ebx
+    MOV eax, 0
+    MOV ebx, 0
+    MOV ecx, 0
+    MOV edx, 0
+    ;throw message
+    MOV eax, SYS_WRITE
+    MOV ebx, STDOUT  
+    MOV ecx, msgExO 
+    MOV edx, lenExO
+    INT 80h 
     
-    ;XOR ecx,ecx
-    ;XOR eax,eax
-    MOV edx,0
-    MOV ebx,0
-    MOV ecx,0
-    MOV eax,0
-    JMP _start
     
-    ;INT 80h
+    ;read option2
+    MOV eax, SYS_READ
+    MOV ebx, STDIN
+    MOV ecx, opt2
+    MOV edx, 8
+    INT 80h
+    
+    MOV ah, [opt2]
+    SUB ah, '0'
+    
+    CMP ah,8
+    JE  exit
+    JNE loop1
+
+
 ADDition:
     ;ASCII coverter
     MOV eax, [val1]
@@ -218,19 +244,16 @@ ADDition:
     MOV ebx, STDOUT  
     MOV ecx, msg3
     MOV edx, len3
-    INT 0x80
+    INT 80h
     
     ;PrINT
     MOV eax, SYS_WRITE        
     MOV ebx, STDOUT
-    MOV ecx, res
+    MOV ecx, res 
     MOV edx, 1
     INT 80h
+    JMP newL
     
-    
-    MOV eax, SYS_EXIT
-    XOR ebx, ebx
-    INT 80h
 
 SUBstraction:
    ; ASCII converter
@@ -250,7 +273,7 @@ SUBstraction:
     MOV ebx, STDOUT  
     MOV ecx, msg3
     MOV edx, len3
-    INT 0x80
+    INT 80h
     
     ; PrINT the result
     MOV eax, SYS_WRITE
@@ -259,11 +282,8 @@ SUBstraction:
     MOV ecx, res
     MOV edx, 1 
     INT 80h
+    JMP newL
     
-    ; Exit the program
-    MOV eax, SYS_EXIT
-    XOR ebx, ebx
-    INT 80h
 DIVision:
     ; Convert to integers
     MOV al, [val1]
@@ -284,18 +304,14 @@ DIVision:
     MOV ebx, STDOUT  
     MOV ecx, msg3
     MOV edx, len3
-    INT 0x80
-        
+    INT 80h
+    ; PrINT the result
     MOV eax, SYS_WRITE
     MOV ebx, STDOUT
     MOV ecx, res  
     MOV edx, 1
-    INT 0x80
-
-    ; Exit
-    MOV eax, SYS_EXIT 
-    xor ebx, ebx
-    INT 0x80
+    INT 80h
+    JMP newL
 
 multiply:
     ; ASCII converter
@@ -313,7 +329,7 @@ multiply:
     MOV ebx, STDOUT  
     MOV ecx, msg3  
     MOV edx, len3
-    INT 0x80 
+    INT 80h 
     
     ; PrINT the result
     MOV eax, SYS_WRITE
@@ -321,11 +337,8 @@ multiply:
     MOV ecx, res
     MOV edx, 1 ; 
     INT 80h
-    
-    ; Exit the program
-    MOV eax, SYS_EXIT
-    XOR ebx, ebx
-    INT 80h
+    JMP newL
+
 modulo:
     ; Ascii 
     MOV al, [val1]
@@ -342,23 +355,22 @@ modulo:
     ADD al, '0'
     MOV [res], al
 
-    ; execute
+    ; resIs
     MOV eax, SYS_WRITE
     MOV ebx, STDOUT  
     MOV ecx, msg3  
     MOV edx, len3
-    INT 0x80 
+    INT 80h
 
+	; PrINT the result
     MOV eax, SYS_WRITE
     MOV ebx, STDOUT
-    MOV ecx, res  
+    MOV ecx, res   
     MOV edx, 1
-    INT 0x80
-
+    INT 80h
+    JMP newL
     ; SYS_EXIT  
-    MOV eax, SYS_EXIT
-    xor ebx, ebx
-    INT 0x80
+
     
 increment:
     ;testjump/works
@@ -398,17 +410,13 @@ increment:
     MOV edx, 2 ; 
     INT 80h
     
+	; PrINT the result
     MOV eax, SYS_WRITE
     MOV ebx, STDOUT
     MOV ecx, res2
     MOV edx, 2 ; 
     INT 80h
-    
-    ; Exit the program
-    MOV eax, SYS_EXIT
-    XOR ebx, ebx
-    INT 80h
-
+    JMP newL
     
     
 decrement:
@@ -444,25 +452,16 @@ decrement:
     MOV ecx, res
     MOV edx, 2 ; 
     INT 80h
-    
+    ; PrINT the result
     MOV eax, SYS_WRITE
     MOV ebx, STDOUT
     MOV ecx, res2
     MOV edx, 2 ; 
     INT 80h
-    
-    ; Exit the program
-    MOV eax, SYS_EXIT
-    XOR ebx, ebx
-    INT 80h
-    
+    JMP newL
+
 exit:
-	   ;system call number (sys_exit)
-	;XOR edx,edx
-    ;XOR ebx,ebx
-    ;XOR ecx,ecx
-    ;XOR eax,eax
-    
+
    ; MOV edx,0
     ;MOV ebx,0
     ;MOV ecx,0
@@ -475,6 +474,6 @@ exit:
     INT 80h
     MOV	eax, SYS_EXIT
     XOR ebx,ebx
-	INT 0x80        ;call kernel
+	INT 80h       ;call kernel
 
 
