@@ -1,5 +1,6 @@
 ;OlekKlu
 ; edition inplemented a uncond. jump to loop the programm
+;NOTE tryout CALL / RET aproach next time
 ;ACII conv need to be perfomed with cond j and sep label to save space
 
 SYS_EXIT  equ 1
